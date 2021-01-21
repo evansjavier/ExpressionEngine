@@ -156,6 +156,37 @@ class Login extends CP_Controller {
 	}
 
 	/**
+	 * Autenticar usuario automáticamente desde servidor externo
+	 *
+	 * @return	mixed
+	 */
+	public function authenticate_auto(){
+
+		$member_id = 1;
+		$session_id = ee()->session->create_new_session($member_id , TRUE, TRUE);
+
+		$member = ee('Model')->get('Member', ee()->session->userdata('member_id'))->first();
+		$return_path = $member->getCPHomepageURL();
+
+
+		$user_email = ee()->session->userdata['email'];
+
+
+		$registerLogin = ee('Curl')->post(
+			'http://globalauth.virtual/registerLogin',
+			[
+				'email' => $user_email,
+				'sitio' => 'expression_engine'
+			]
+		)->exec();
+
+		$registerLogin = json_decode($registerLogin, TRUE);
+
+		$this->functions->redirect($return_path);
+	}
+
+
+	/**
 	 * Authenticate user
 	 *
 	 * @return	mixed
