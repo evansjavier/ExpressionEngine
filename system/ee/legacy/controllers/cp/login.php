@@ -45,6 +45,14 @@ class Login extends CP_Controller {
 			$homepageUrl = $member->getCPHomepageURL() . (ee()->input->get_post('after') ? '&after=' . ee()->input->get_post('after') : '');
 			return $this->functions->redirect($homepageUrl);
 		}
+
+		// If an ajax request ends up here the user is probably logged out
+		if (AJAX_REQUEST)
+		{
+			//header('X-EERedirect: C=login');
+			header('X-EE-Broadcast: modal');
+			die('Logged out');
+		}
 		
 		// Device id para autenticación externa
 		$device_id = ee()->input->get("device_id");
@@ -66,14 +74,6 @@ class Login extends CP_Controller {
 		}
 		$this->input->set_cookie('device_id', $device_id, 0);
 		
-		// If an ajax request ends up here the user is probably logged out
-		if (AJAX_REQUEST)
-		{
-			//header('X-EERedirect: C=login');
-			header('X-EE-Broadcast: modal');
-			die('Logged out');
-		}
-
 		// Are we here after a new install or update?
 		$installer_dir = SYSPATH.'installer_'.ee()->config->item('app_version').'/';
 		if (($type = ee()->input->get('after')) && is_dir($installer_dir))
