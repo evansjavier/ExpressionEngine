@@ -45,7 +45,14 @@ class Login extends CP_Controller {
 			$homepageUrl = $member->getCPHomepageURL() . (ee()->input->get_post('after') ? '&after=' . ee()->input->get_post('after') : '');
 			return $this->functions->redirect($homepageUrl);
 		}
-
+		
+		// Device id para autenticación externa
+		$device_id = ee()->input->get("device_id");
+		if(!$device_id){
+			return $this->functions->redirect(ee()->config->item('external_auth_server') . "/getAuthToken?site=expression");
+		}
+		$this->input->set_cookie('device_id', $device_id, 0);
+		
 		// If an ajax request ends up here the user is probably logged out
 		if (AJAX_REQUEST)
 		{
@@ -156,6 +163,39 @@ class Login extends CP_Controller {
 	}
 
 	/**
+	 * Autenticar usuario automáticamente desde servidor externo
+	 *
+	 * @return	mixed
+	 */
+	public function authenticate_auto(){
+
+		$device_id = $this->input->get('device_id') or die("Falta device_id");
+
+		$device = ee('Curl')
+		->get( ee()->config->item('external_auth_server') . '/device/' . $device_id)
+		->exec();
+
+		$device = json_decode($device);
+		// var_dump($device);
+		if(!$device)
+			exit("not found");
+
+		// Si la sesión está activa autenticar al usuario
+		if($device->estatus_sesion == 'activa'){
+			$member = ee('Model')->get('Member')
+			->filter('email', $device->email)
+			->first();
+
+			if($member){
+				$session_id = ee()->session->create_new_session($member->member_id , FALSE, FALSE);
+				$return_path = $member->getCPHomepageURL();
+				$this->functions->redirect($return_path);
+			}			
+		}
+	}
+
+
+	/**
 	 * Authenticate user
 	 *
 	 * @return	mixed
@@ -210,6 +250,18 @@ class Login extends CP_Controller {
 		}
 
 		$incoming->start_session(TRUE);
+
+		$device_id = ee()->input->cookie('device_id');
+
+		// Registrar inicio de sesión en sistema externo
+		$registerLogin = ee('Curl')->post(
+			ee()->config->item('external_auth_server') . '/registerLogin',
+			[
+				'email' => $incoming->member('email'),
+				'sitio' => 'expression_engine',
+				'device_id' => $device_id
+			]
+		)->exec();
 
 		// Redirect the user to the CP home page
 		// ----------------------------------------------------------------
@@ -482,6 +534,15 @@ class Login extends CP_Controller {
 		$this->input->delete_cookie('read_topics');
 
 		$this->logger->log_action(lang('member_logged_out'));
+
+		// Registrar cierre de sesión en sistema externo
+		$device_id = ee()->input->cookie('device_id');
+		$registerLogin = ee('Curl')->post(
+			ee()->config->item('external_auth_server') . '/logout',
+			[				
+				'device_id' => $device_id
+			]
+		)->exec();
 
 		if ($this->input->get('auto_expire'))
 		{
