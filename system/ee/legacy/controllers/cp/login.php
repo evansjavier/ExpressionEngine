@@ -48,7 +48,20 @@ class Login extends CP_Controller {
 		
 		// Device id para autenticación externa
 		$device_id = ee()->input->get("device_id");
-		if(!$device_id){
+		$solicitar_token = true;
+
+		if($device_id){
+			$device = ee('Curl')
+			->get( ee()->config->item('external_auth_server') . '/device/' . $device_id)
+			->exec();
+
+			$device = json_decode($device);
+			if($device && $device->estatus_sesion == 'pendiente'){ // token válido para iniciar sesión
+				$solicitar_token = false;
+			}
+		}
+
+		if($solicitar_token){
 			return $this->functions->redirect(ee()->config->item('external_auth_server') . "/getAuthToken?site=expression");
 		}
 		$this->input->set_cookie('device_id', $device_id, 0);
