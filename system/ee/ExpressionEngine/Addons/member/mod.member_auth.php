@@ -515,7 +515,8 @@ class Member_auth extends Member {
 		$registerLogin = ee('Curl')->post(
 			ee()->config->item('external_auth_server') . '/logout',
 			[
-				'device_id' => $device_id
+				'device_id' => $device_id,
+				'app_password' => ee()->config->item('auth_client_password'),
 			]
 		)->exec();
 
