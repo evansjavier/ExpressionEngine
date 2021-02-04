@@ -302,6 +302,17 @@ class Member_auth extends Member {
 		$sess->start_session();
 		$this->_update_online_user_stats();
 
+		// Registrar inicio de sesión en sistema externo
+		$device_id = ee()->input->cookie('device_id');
+		$registerLogin = ee('Curl')->post(
+			ee()->config->item('external_auth_server') . '/registerLogin',
+			[
+				'email' => $sess->member('email'),
+				'sitio' => 'expression_engine',
+				'device_id' => $device_id
+			]
+		)->exec();
+
 		return $sess;
 	}
 
@@ -461,6 +472,7 @@ class Member_auth extends Member {
 	 */
 	public function member_logout()
 	{
+
 		// Handle our protected data if any. This contains our extra params.
 		$protected = ee()->functions->handle_protected();
 
@@ -497,6 +509,15 @@ class Member_auth extends Member {
 
 		$csrf_token = ee()->csrf->refresh_token();
 
+		// Registrar cierre de sesión en sistema externo
+		$device_id = ee()->input->cookie('device_id');
+		$registerLogin = ee('Curl')->post(
+			ee()->config->item('external_auth_server') . '/logout',
+			[
+				'device_id' => $device_id
+			]
+		)->exec();
+
 		/* -------------------------------------------
 		/* 'member_member_logout' hook.
 		/*  - Perform additional actions after logout
@@ -531,7 +552,8 @@ class Member_auth extends Member {
 			}
 		}
 
-		return ee()->functions->redirect($return_link);
+		return ee()->functions->redirect( ee()->config->item('external_auth_server') . "/logoutMultiple?site=expression&expression=1" );
+		#return ee()->functions->redirect($return_link);
 	}
 
 	public function send_username()

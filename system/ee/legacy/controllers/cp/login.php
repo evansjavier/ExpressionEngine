@@ -70,9 +70,9 @@ class Login extends CP_Controller {
 		}
 
 		if($solicitar_token){
-			return $this->functions->redirect(ee()->config->item('external_auth_server') . "/getAuthToken?site=expression");
+#			return $this->functions->redirect(ee()->config->item('external_auth_server') . "/getAuthToken?site=expression");
 		}
-		$this->input->set_cookie('device_id', $device_id, 0);
+#		$this->input->set_cookie('device_id', $device_id, 0);
 		
 		// Are we here after a new install or update?
 		$installer_dir = SYSPATH.'installer_'.ee()->config->item('app_version').'/';

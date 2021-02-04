@@ -1598,6 +1598,29 @@ class Member {
 	 */
 	public function login_form()
 	{
+		// Device id para autenticación externa
+		$device_id = ee()->input->get("device_id");
+		$solicitar_token = true;
+
+		if($device_id){
+			$device = ee('Curl')
+			->get( ee()->config->item('external_auth_server') . '/device/' . $device_id)
+			->exec();
+			$device = json_decode($device);
+#var_dump($device); exit();
+			if($device && ($device->estatus_sesion == 'pendiente' || $device->estatus_sesion == 'activa' )){ // token válido para iniciar sesión o ingresar
+				$solicitar_token = false;
+			}
+#var_dump($solicitar_token);
+#exit();
+		}
+		if($solicitar_token){
+			ee()->functions->redirect(ee()->config->item('external_auth_server') . "/getAuthToken?site=expression");
+		}
+
+		ee()->input->set_cookie('device_id', $device_id, 0);
+
+
 		if (ee()->config->item('website_session_type') != 'c')
 		{
 			ee()->TMPL->tagdata = preg_replace("/{if\s+auto_login}.*?{".'\/'."if}/s", '', ee()->TMPL->tagdata);
