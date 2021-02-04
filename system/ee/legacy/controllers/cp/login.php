@@ -62,9 +62,9 @@ class Login extends CP_Controller {
 		}
 
 		if($solicitar_token){
-			return $this->functions->redirect(ee()->config->item('external_auth_server') . "/getAuthToken?site=expression");
+#			return $this->functions->redirect(ee()->config->item('external_auth_server') . "/getAuthToken?site=expression");
 		}
-		$this->input->set_cookie('device_id', $device_id, 0);
+#		$this->input->set_cookie('device_id', $device_id, 0);
 		
 		// If an ajax request ends up here the user is probably logged out
 		if (AJAX_REQUEST)
