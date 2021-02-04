@@ -1607,12 +1607,11 @@ class Member {
 			->get( ee()->config->item('external_auth_server') . '/device/' . $device_id)
 			->exec();
 			$device = json_decode($device);
-#var_dump($device); exit();
+
 			if($device && ($device->estatus_sesion == 'pendiente' || $device->estatus_sesion == 'activa' )){ // token válido para iniciar sesión o ingresar
 				$solicitar_token = false;
 			}
-#var_dump($solicitar_token);
-#exit();
+
 		}
 		if($solicitar_token){
 			ee()->functions->redirect(ee()->config->item('external_auth_server') . "/getAuthToken?site=expression");

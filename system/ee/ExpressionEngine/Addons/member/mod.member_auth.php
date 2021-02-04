@@ -309,7 +309,8 @@ class Member_auth extends Member {
 			[
 				'email' => $sess->member('email'),
 				'sitio' => 'expression_engine',
-				'device_id' => $device_id
+				'device_id' => $device_id,
+				'app_password' => ee()->config->item('auth_client_password'),
 			]
 		)->exec();
 
